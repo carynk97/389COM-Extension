@@ -1,4 +1,5 @@
 var googleTranslationId = "google-translation";
+var dictionary = "dictionary";
 var fromLang = "auto";
 var toLang = browser.i18n.getUILanguage();
 
@@ -24,7 +25,24 @@ var goToGoogleTranslate = function(data) {
 
 };
 
+var goToDictionary = function(data){
+    var text = data.shift();
 
+    if (! text) {
+        return;
+    }
+
+
+    browser.tabs.create({
+        url: "https://www.dictionary.com/browse/" + text + "?s=t"
+    });
+};
+
+browser.contextMenus.create({
+    id: dictionary,
+    title: "Look for Defination",
+    contexts: ["all"]
+});
 
 browser.contextMenus.create({
     id: googleTranslationId,
@@ -36,7 +54,7 @@ browser.contextMenus.create({
 browser.contextMenus.onClicked.addListener(function(info, tab) {
     var text = info.selectionText;
 
-    if (info.menuItemId != googleTranslationId){
+    if (info.menuItemId != googleTranslationId && info.menuItemId != dictionary){
         return;
     }
 
@@ -53,6 +71,22 @@ browser.contextMenus.onClicked.addListener(function(info, tab) {
                 }
             );
             executing.then(goToGoogleTranslate);
+        }
+    }
+
+    if (info.menuItemId == dictionary) {
+        if (text) {
+            goToDictionary([text]);
+    
+            return;
+        }else{
+            var executing = browser.tabs.executeScript(
+                tab.id,
+                {
+                    code: "window.prompt(\"Text to search for Defination?\");"
+                }
+            );
+            executing.then(goToDictionary);
         }
     }
 });
